@@ -33,4 +33,10 @@ class DataBase {
         }
         self::instance()->insertBatch($entities);
     }
+
+    public static function get($key){
+        $query = self::instance()->query()->kind($key);
+        $datastore_results = self::instance()->runQuery($query);
+        return $datastore_results;
+    }
 }
