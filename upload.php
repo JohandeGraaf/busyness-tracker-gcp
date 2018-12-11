@@ -1,20 +1,6 @@
 <?php
-use Google\Cloud\Datastore\DatastoreClient;
-// https://googleapis.github.io/google-cloud-php/#/docs/google-cloud/v0.89.0/datastore/datastoreclient
 
-$projectId = getenv('GOOGLE_CLOUD_PROJECT');
-$datastore = new DatastoreClient([
-	'projectId' => $projectId
-]);
-$query = $datastore->query()->kind('data');
-$datastore_results = $datastore->runQuery($query);
-
-foreach ($datastore_results as $entity) {
-	//$entity['key']
-	//$entity['value']
-	var_dump($entity);
-}
-
+include_once 'DataBase.php';
 
 header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Max-Age: 3600");
@@ -22,20 +8,31 @@ header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers
 
 $data = json_decode(file_get_contents("php://input"));
 
-$deviceName = $data->name;
+$dataObj = new stdClass();
+$dataObj->deviceName = $data->name;
+$dataObj->filtered5Min = $data->client_count->filtered_num_last_5_mins;
+$dataObj->filteredHour = $data->client_count->filtered_num_last_5_mins;
+$dataObj->all5Min = $data->client_count->num_clients_last_5_mins;
+$dataObj->allHour = $data->client_count->num_clients_last_hour;
 
-$filtered5Min = $data->client_count->filtered_num_last_5_mins;
-$filteredHour = $data->client_count->filtered_num_last_5_mins;
-$all5Min = $data->client_count->num_clients_last_5_mins;
-$allHour = $data->client_count->num_clients_last_hour;
+$curl = curl_init();
+curl_setopt($curl, CURLOPT_POST, 1);
+curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($data->ap));
+curl_setopt($curl, CURLOPT_URL, 'https://www.googleapis.com/geolocation/v1/geolocate');
+curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+    'APIKEY: '.getenv('GOOGLE_API_KEY'),
+    'Content-Type: application/json',
+));
+curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+$result = curl_exec($curl);
+curl_close($curl);
+var_dump($result);
 
-$accessPoints = $data->ap;
-$devices = $data->devices;
+DataBase::insert('DevicesInArea', $dataObj);
+DataBase::batchInsert('AccessPoints', $data->ap);
+DataBase::batchInsert('Devices', $data->devices);
 
-foreach ($accessPoints as $ap) {
-	var_dump($ap->macAddress);
-}
-
-echo 'Hello world';
+http_response_code(202);
 
 ?>
