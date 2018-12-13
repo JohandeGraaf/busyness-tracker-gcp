@@ -8,11 +8,15 @@
 
 require 'DataBase.php';
 
-$dataTypes = ['all5Min', 'allHour', 'filtered5Min', 'filteredHour'];
+//$dataTypes = ['all5Min', 'allHour', 'filtered5Min', 'filteredHour'];
+$dataTypes = ['filtered5Min', 'filteredHour'];
 
 $data = DataBase::get('DevicesInArea');
 $entries = array();
 foreach ($data as $d){
+    if($d['lat'] == null || $d['long'] == null){
+        continue;
+    }
     $entry = new stdClass();
     $entry->deviceName = $d['deviceName'];
     $entry->all5Min = $d['all5Min'];
@@ -75,9 +79,9 @@ foreach ($data as $d){
     <button onclick="changeRadius()">Change radius</button>
     <button onclick="changeOpacity()">Change opacity</button>
     <select id="typeSelect" onchange="changeType()">
-        <option value="all5Min" selected>all5Min</option>
-        <option value="allHour">allHour</option>
-        <option value="filtered5Min">filtered5Min</option>
+<!--        <option value="all5Min" selected>all5Min</option>-->
+<!--        <option value="allHour">allHour</option>-->
+        <option value="filtered5Min" selected>filtered5Min</option>
         <option value="filteredHour">filteredHour</option>
     </select>
 
@@ -86,7 +90,7 @@ foreach ($data as $d){
 <script>
     let map;
     let heatmaps = {};
-    let currentType = 'all5Min';
+    let currentType = 'filtered5Min';
 
     function initMap() {
         map = new google.maps.Map(document.getElementById('map'), {

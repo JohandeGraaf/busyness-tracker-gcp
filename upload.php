@@ -31,6 +31,7 @@ $resultObj = json_decode($result);
 
 $dataObj->lat = $resultObj->location->lat;
 $dataObj->long = $resultObj->location->lng;
+$dataObj->accuracy = $resultObj->accuracy;
 
 $date = new DateTime();
 $dataObj->datetime = $date->format('Y-m-d H:i:s');
